@@ -1,2 +1,3 @@
 npm i -g
-hitomi download <galleryId>
+
+hitomi download galleryId

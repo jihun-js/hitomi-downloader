@@ -1,19 +1,12 @@
 import axios from "axios";
 import cliProgress from "cli-progress";
-import _colors from 'colors';
-
-const headers = {
-    'Referer': 'https://hitomi.la/',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0',
-};
+import chalk from "chalk";
 
 export const instance = axios.create({
-    headers
-});
-
-export const abInstance = axios.create({
-    headers,
-    responseType : 'arraybuffer'
+    headers: {
+        'Referer': 'https://hitomi.la/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0',
+    }
 });
 
 const { m, s, b } = await (async () => {
@@ -26,10 +19,10 @@ const { m, s, b } = await (async () => {
     };
 })();
 
-export const getURL = hash => `https://${(mm=>String.fromCharCode(97+m(parseInt(mm[2]+mm[1],16)))+'a')(/\/[0-9a-f]{61}([0-9a-f]{2})([0-9a-f])/.exec(b+s(hash)+'/'+hash))}.hitomi.la/webp/${b+s(hash)+'/'+hash}.webp`;
+export const getURL = h => (g=>`https://${(v=>String.fromCharCode(97+m(parseInt(v[2]+v[1],16)))+'a')(/\/[0-9a-f]{61}([0-9a-f]{2})([0-9a-f])/.exec(g))}.hitomi.la/webp/${g}.webp`)(b+s(h)+'/'+h);
 
 export const bar = new cliProgress.Bar({
-    format: `${_colors.green('Downloading... {bar}')} | {percentage}% | ETA: {eta}s | {value}/{total} |`,
+    format: `${chalk.green('Downloading... {bar}')} | {percentage}% | ETA: {eta}s | {value}/{total} |`,
     barCompleteChar: '\u2588',
     barIncompleteChar: '\u2590',
 });

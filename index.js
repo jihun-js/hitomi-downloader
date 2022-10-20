@@ -2,13 +2,11 @@
 import { writeFile, mkdir, readdir } from "fs/promises";
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import pLimit from "p-limit";
 import { program } from 'commander';
-import { getURL, instance, abInstance, bar } from "./util/common.js";
+import { getURL, instance, bar } from "./util/common.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const limit = pLimit(7);
 
 let i = 0; 
 
@@ -18,7 +16,7 @@ async function makeDir(dir) {
     } catch(e) {
         if (e.code === 'ENOENT') await mkdir(dir);
     };
-}
+};
 
 async function getInfo(gid) {
     try {
@@ -33,12 +31,13 @@ async function getInfo(gid) {
 
 async function imageRequest(url) {
     try {
-        const { data } = await abInstance.get(url);
+        const { data } = await instance.get(url, {
+            responseType : 'arraybuffer'
+        });
         return data;
     } catch (error) {
         if (error.response?.status === 404) throw new Error('NOT FOUND');
-        if (error.response?.status === 503) throw new Error(error);
-        console.error(error.response);
+        return imageRequest(url);
     };
 };
 
@@ -46,7 +45,7 @@ async function imageDownload(file, dir) {
     const url = getURL(file.hash);
     const fileName = `${file['name'].split('.').shift()}.webp`;
     const imageData = await imageRequest(url);
-    await writeFile(join(dir,fileName), imageData);
+    await writeFile(join(dir, fileName), imageData);
     i = i + 1;
     return bar.update(i);    
 };
@@ -59,13 +58,11 @@ async function download(gid) {
     await makeDir(galleryDir);
     const { files, title, type, language } = await getInfo(gid);
     const { length } = files;
-
     console.log(`title : ${title}\ntype : ${type}\nlanguage : ${language}\ngid : ${gid}\nlength : ${length}`);
     bar.start(length, i);
-    const promises = files.map(file => limit(() => imageDownload(file, galleryDir)));
-    await Promise.all(promises);
+    await Promise.all(files.map(file => imageDownload(file, galleryDir)));
     const timeEnd = new Date();
-    console.log(`\nDownload Complete\nelapsed time : ${((timeEnd - timeStart) / 1000).toFixed(2)}s`);
+    console.log(`\nDone\nelapsed time : ${((timeEnd - timeStart) / 1000).toFixed(2)}s`);
     return process.exit(0);
 };
 
